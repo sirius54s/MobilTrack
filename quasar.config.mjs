@@ -75,8 +75,8 @@ export default configure(() => {
         // Configuración adicional del manifest
       },
       extendManifestJson(json) {
-        json.name = "MobiTrack"
-        json.short_name = "MobiTrack"
+        json.name = "MobilTrack"
+        json.short_name = "MobilTrack"
         json.description = "descripcion por redactar"
         json.display = "standalone"
         json.orientation = "portrait"
@@ -104,8 +104,8 @@ export default configure(() => {
 
       // Usar el builder interno de Quasar
       builder: {
-        appId: "com.MobiTrack",
-        productName: "MobiTrack",
+        appId: "com.MobilTrack",
+        productName: "MobilTrack",
 
         directories: {
           output: "dist_electron",
@@ -209,7 +209,7 @@ export default configure(() => {
         publish: {
           provider: "github",
           owner: "sirius54s", // 👈 reemplaza con tu usuario
-          repo: "GestionFix", // 👈 reemplaza con tu repositorio
+          repo: "MobilTrack", // 👈 reemplaza con tu repositorio
         },
       },
 
