@@ -11,7 +11,7 @@ import { updateElectronApp } from "update-electron-app"
 
 // Configuración de logging para el auto-updater
 autoUpdater.logger = log
-log.transports.file.level = "info"
+log.transports.file.level = "debug"
 
 // Chequeos automáticos cada 10 minutos y diálogos nativos
 //
