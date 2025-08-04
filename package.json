@@ -1,0 +1,56 @@
+{
+  "name": "MobiTrack",
+  "version": "0.0.1",
+  "description": "descripcion por redactar",
+  "productName": "siriusMobiltrack",
+  "author": "sirius54s <yoelreyes54@gmail.com>",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18",
+    "npm": ">=6.13.4"
+  },
+  "scripts": {
+    "dev": "quasar dev",
+    "dev:electron": "quasar dev -m electron",
+    "build": "quasar build",
+    "build:electron": "quasar build -m electron",
+    "test": "echo \"No test specified\" && exit 0",
+    "lint": "eslint ./src --ext .ts,.vue",
+    "lint:fix": "eslint ./src --ext .ts,.vue --fix"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.17.0",
+    "axios": "^1.11.0",
+    "compressorjs": "^1.2.1",
+    "electron-log": "^5.4.2",
+    "electron-updater": "^6.6.2",
+    "firebase": "^12.0.0",
+    "pinia": "^2.0.30",
+    "quasar": "^2.18.2",
+    "update-electron-app": "^3.1.1",
+    "vite": "^6.3.5",
+    "vue": "^3.4.21",
+    "vue-router": "^4.2.5",
+    "webp-converter-browser": "^1.0.4"
+  },
+  "devDependencies": {
+    "@electron/packager": "^18.3.6",
+    "@eslint/eslintrc": "^3.3.1",
+    "@quasar/app-vite": "^2.3.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "autoprefixer": "^10.4.21",
+    "electron": "^37.2.5",
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.25.8",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.3",
+    "eslint-plugin-vue": "^10.4.0",
+    "postcss": "^8.4.21",
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3"
+  }
+}
