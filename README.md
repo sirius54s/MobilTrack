@@ -1,24 +1,17 @@
-# quasar (detona)
+# 📱 MobilTrack — Dashboard para Reparación de Celulares Beta
 
-descripcion por redactar
+**MobilTrack** es una aplicación desarrollada con [Quasar Framework](https://quasar.dev/) que centraliza la gestión de reparaciones de dispositivos móviles. Desde el diagnóstico inicial hasta la entrega final, MobilTrack ofrece un entorno intuitivo para técnicos y administradores, optimizando tiempos y mejorando la trazabilidad del servicio.
 
-## Install the dependencies
+> ✍️ _Descripción detallada por redactar. El proyecto se encuentra en desarrollo activo._
+
+---
+
+## 📦 Instalación de dependencias
+
+Usa el gestor de paquetes que prefieras:
+
 ```bash
 yarn
-# or
+# o
 npm install
 ```
-
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
-```bash
-quasar dev
-```
-
-
-### Build the app for production
-```bash
-quasar build
-```
-
-### Customize the configuration
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).

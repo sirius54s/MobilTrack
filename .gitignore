@@ -1,29 +1,30 @@
+# Sistema operativo
 .DS_Store
 .thumbs.db
-node_modules
+
+# Node modules
+node_modules/
 
 # Quasar core related directories
-.quasar
-/dist
-node_modules/
+.quasar/
 dist/
 dist_electron/
 win-unpacked/
 capacitor/
 
 # Cordova related directories and files
-/src-cordova/node_modules
-/src-cordova/platforms
-/src-cordova/plugins
-/src-cordova/www
+src-cordova/node_modules/
+src-cordova/platforms/
+src-cordova/plugins/
+src-cordova/www/
 
 # Capacitor related directories and files
-/src-capacitor/www
-/src-capacitor/node_modules
+src-capacitor/www/
+src-capacitor/node_modules/
 
 # BEX related directories and files
-/src-bex/www
-/src-bex/js/core
+src-bex/www/
+src-bex/js/core/
 
 # Log files
 npm-debug.log*
@@ -31,10 +32,11 @@ yarn-debug.log*
 yarn-error.log*
 
 # Editor directories and files
-.idea
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 
-env
+# Environment files
+.env
