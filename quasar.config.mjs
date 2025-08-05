@@ -25,7 +25,7 @@ export default configure(() => ({
       viteConf.resolve = viteConf.resolve || {}
       viteConf.resolve.alias = {
         ...viteConf.resolve.alias,
-        // Alias de src usando fileURLToPath para ESM
+        // Alias de src usando fileURLToPath para ESMM
         src: fileURLToPath(new URL("./src", import.meta.url)),
       }
     },
