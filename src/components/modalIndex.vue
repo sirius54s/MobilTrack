@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import type { Component } from 'vue'
-import { useModalStore } from 'src/stores/modalStore'
-import { Dark } from 'quasar'
+import { ref } from "vue"
+import type { Component } from "vue"
+import { useModalStore } from "src/stores/modalStore"
+import { Dark } from "quasar"
 
-// Importa tus componentes modales específicos
+//// Importa tus componentes modales específicos
 
-import AgregarReparacionModal from 'src/components/addRepair.vue'
-import AdditionalFunctionsModal from 'src/components/AdditionalFunctionsModal.vue'
+import AgregarReparacionModal from "src/components/addRepair.vue"
+import AdditionalFunctionsModal from "src/components/AdditionalFunctionsModal.vue"
 
 // Array de funciones iniciales
 const funcionesIniciales = [
-  'Agregar reparación',
-  'Actualizar estado de reparación',
-  'Consultar historial de reparaciones',
-  'Agregar producto al inventario',
-  'Ver más...',
+  "Agregar reparación",
+  "Actualizar estado de reparación",
+  "Consultar historial de reparaciones",
+  "Agregar producto al inventario",
+  "Ver más...",
 ]
 
 // Instancia del store de modales
@@ -26,11 +26,11 @@ const funcionesServicioTecnico = ref<string[]>([...funcionesIniciales])
 
 // Mapeo de función a su componente modal (para las funciones individuales)
 const modalMap: Record<string, Component> = {
-  'Agregar reparación': AgregarReparacionModal,
+  "Agregar reparación": AgregarReparacionModal,
 }
 
 function handleFuncionClick(funcion: string) {
-  if (funcion === 'Ver más...') {
+  if (funcion === "Ver más...") {
     // Abre el modal de funciones adicionales sin pasar props.
     modalStore.openModal(AdditionalFunctionsModal)
   } else if (modalMap[funcion]) {
@@ -60,7 +60,10 @@ function handleFuncionClick(funcion: string) {
 
     <!-- Modal dinámico controlado por Pinia -->
     <q-dialog v-model="modalStore.modalVisible">
-      <component :is="modalStore.activeModalComponent" @close="modalStore.closeModal" />
+      <component
+        :is="modalStore.activeModalComponent"
+        @close="modalStore.closeModal"
+      />
     </q-dialog>
   </div>
 </template>
