@@ -1,17 +1,10 @@
 const fs = require("fs")
-const path = require("path")
 
-const newVersion = process.argv[2]
-if (!newVersion) {
-  console.error("No version specified!")
-  process.exit(1)
-}
+const version = process.argv[2]
+const file = "./package.json"
 
-const packageJsonPath = path.resolve(__dirname, "package.json")
-const packageJson = require(packageJsonPath)
+const pkg = JSON.parse(fs.readFileSync(file, "utf8"))
+pkg.version = version
 
-packageJson.version = newVersion
-
-fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
-
-console.log(`Version updated to ${newVersion} in package.json`)
+fs.writeFileSync(file, JSON.stringify(pkg, null, 2))
+console.log(`Updated version to ${version}`)
