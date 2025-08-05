@@ -12,6 +12,6 @@ Usa el gestor de paquetes que prefieras:
 
 ```bash
 yarn
-# or
+# o
 npm install
 ```
