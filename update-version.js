@@ -1,10 +1,20 @@
-const fs = require("fs")
+import fs from "fs"
 
-const version = process.argv[2]
-const file = "./package.json"
+const newVersion = process.argv[2]
 
-const pkg = JSON.parse(fs.readFileSync(file, "utf8"))
-pkg.version = version
+if (!newVersion) {
+  console.error("❌ No version provided.")
+  process.exit(1)
+}
 
-fs.writeFileSync(file, JSON.stringify(pkg, null, 2))
-console.log(`Updated version to ${version}`)
+const pkgPath = "./package.json"
+
+try {
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"))
+  pkg.version = newVersion
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8")
+  console.log(`✅ Version updated to ${newVersion}`)
+} catch (err) {
+  console.error("❌ Failed to update version:", err)
+  process.exit(1)
+}
