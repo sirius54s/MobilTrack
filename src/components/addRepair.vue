@@ -1,56 +1,56 @@
 <script setup lang="ts">
-import { reactive, computed } from 'vue';
+import { reactive, computed } from "vue"
 
 // Opciones para el técnico asignado
 const tecnicos = [
-  { label: 'Yoel', value: 'Yoel' },
-  { label: 'Miguel', value: 'Miguel' },
-  { label: 'No especificar', value: 'No especificar' },
-];
+  { label: "Yoel", value: "Yoel" },
+  { label: "manuel", value: "manuel" },
+  { label: "No especificar", value: "No especificar" },
+]
 
 // Opciones para el Estado
 const estadoOptions = [
-  { label: 'Listo', value: 'Listo' },
-  { label: 'Cancelado', value: 'Cancelado' },
-  { label: 'Pendiente', value: 'Pendiente' },
-];
+  { label: "Listo", value: "Listo" },
+  { label: "Cancelado", value: "Cancelado" },
+  { label: "Pendiente", value: "Pendiente" },
+]
 
 // El formulario inicia con campos vacíos y el ID se genera automáticamente.
 // Se agrega un único campo booleano 'imprimirBoleta', preseleccionado por defecto.
 const formData = reactive({
   id: Math.floor(Date.now() * Math.random()).toString(),
-  modelo: '',
-  estado: 'Pendiente', // Se usará para el estado
-  marca: '', // Nuevo campo para la marca
-  fecha: '',
+  modelo: "",
+  estado: "Pendiente", // Se usará para el estado
+  marca: "", // Nuevo campo para la marca
+  fecha: "",
   // Usamos este campo para "Tipo de reparación"
-  tipoServicio: '',
-  costoEstimado: '',
-  fechaEntrega: '',
-  tecnicoAsignado: '',
-  nombreCliente: '',
-  telefono: '',
-  notaDetalles: '',
+  tipoServicio: "",
+  costoEstimado: "",
+  fechaEntrega: "",
+  tecnicoAsignado: "",
+  nombreCliente: "",
+  telefono: "",
+  notaDetalles: "",
   imprimirBoleta: true,
-});
+})
 
 // Propiedad computada para formatear el costo con separador de miles (punto)
 const formattedCosto = computed({
   get() {
-    if (!formData.costoEstimado) return '';
-    const num = Number(formData.costoEstimado);
-    return new Intl.NumberFormat('es-CL').format(num);
+    if (!formData.costoEstimado) return ""
+    const num = Number(formData.costoEstimado)
+    return new Intl.NumberFormat("es-CL").format(num)
   },
   set(value: string) {
-    const cleaned = value.toString().replace(/\D/g, '');
-    formData.costoEstimado = cleaned;
+    const cleaned = value.toString().replace(/\D/g, "")
+    formData.costoEstimado = cleaned
   },
-});
+})
 
 const submitForm = () => {
-  console.log('Datos enviados:', formData);
+  console.log("Datos enviados:", formData)
   // Aquí puedes agregar la lógica para enviar el formulario al backend.
-};
+}
 </script>
 
 <template>
@@ -60,7 +60,14 @@ const submitForm = () => {
       <q-icon name="arrow_forward" />
       <div>Agregar un nuevo registro:</div>
       <q-space />
-      <q-btn dense flat round icon="close" v-close-popup @click="$emit('close')">
+      <q-btn
+        dense
+        flat
+        round
+        icon="close"
+        v-close-popup
+        @click="$emit('close')"
+      >
         <q-tooltip>Close</q-tooltip>
       </q-btn>
     </q-bar>
@@ -77,16 +84,35 @@ const submitForm = () => {
             <!-- Row: ID y Modelo -->
             <div class="row q-col-gutter-sm">
               <div class="col-6">
-                <q-input filled dense v-model="formData.id" label="ID" disable class="q-mb-sm" />
+                <q-input
+                  filled
+                  dense
+                  v-model="formData.id"
+                  label="ID"
+                  disable
+                  class="q-mb-sm"
+                />
               </div>
               <div class="col-6">
-                <q-input filled dense v-model="formData.modelo" label="Modelo" class="q-mb-sm" />
+                <q-input
+                  filled
+                  dense
+                  v-model="formData.modelo"
+                  label="Modelo"
+                  class="q-mb-sm"
+                />
               </div>
             </div>
             <!-- Row: Marca y Estado -->
             <div class="row q-col-gutter-sm">
               <div class="col-6">
-                <q-input filled dense v-model="formData.marca" label="Marca" class="q-mb-sm" />
+                <q-input
+                  filled
+                  dense
+                  v-model="formData.marca"
+                  label="Marca"
+                  class="q-mb-sm"
+                />
               </div>
               <div class="col-6">
                 <q-select
@@ -163,7 +189,13 @@ const submitForm = () => {
           <!-- Columna Derecha: Datos del Cliente -->
           <div class="col-12 col-md-6">
             <div class="section-header">Cliente</div>
-            <q-input filled dense v-model="formData.nombreCliente" label="Nombre" class="q-mb-sm" />
+            <q-input
+              filled
+              dense
+              v-model="formData.nombreCliente"
+              label="Nombre"
+              class="q-mb-sm"
+            />
             <q-input
               filled
               dense
@@ -195,7 +227,12 @@ const submitForm = () => {
         <!-- Botón de Envío -->
         <div class="row q-mt-md">
           <div class="col-12">
-            <q-btn label="Enviar" type="submit" color="primary" class="full-width" />
+            <q-btn
+              label="Enviar"
+              type="submit"
+              color="primary"
+              class="full-width"
+            />
           </div>
         </div>
       </q-form>

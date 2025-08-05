@@ -1,40 +1,51 @@
-import { app, BrowserWindow, dialog } from "electron"
-import path from "path"
-import os from "os"
-import { fileURLToPath } from "url"
+// electron-main.ts (o electron-main.js si usas ESM)
+// -----------------------------------------------
 
-import electronUpdater from "electron-updater"
-const { autoUpdater } = electronUpdater
+import { app, BrowserWindow, dialog } from 'electron'
+import path from 'path'
+import os from 'os'
+import { fileURLToPath } from 'url'
 
-import log from "electron-log"
-import { updateElectronApp } from "update-electron-app"
+/**
+ * electron-updater es CommonJS. Hay que importarlo como default
+ * y después extraer autoUpdater.
+ */
+import updaterPkg from 'electron-updater'
+const { autoUpdater } = updaterPkg
 
-// Configuración de logging para el auto-updater
+import log from 'electron-log'
+
+// 1. Forzar ruta de log a <userData>/logs/main.log
+log.transports.file.resolvePath = () =>
+  path.join(app.getPath('userData'), 'logs', 'main.log')
+log.transports.file.level = 'debug'
 autoUpdater.logger = log
-log.transports.file.level = "debug"
 
-// Chequeos automáticos cada 10 minutos y diálogos nativos
-//
+// 2. Mensaje de inicio para confirmar que el logger funciona
+log.info('🚀 Iniciando la app', {
+  userDataPath: app.getPath('userData')
+})
 
-// Paths y directorios dinámicos
+// Rutas dinámicas
 const preloadFolder =
-  process.env.QUASAR_ELECTRON_PRELOAD_FOLDER ?? "dist/electron"
-const preloadExtension = process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION ?? ".js"
-const currentDir = fileURLToPath(new URL(".", import.meta.url))
+  process.env.QUASAR_ELECTRON_PRELOAD_FOLDER ?? 'dist/electron'
+const preloadExtension =
+  process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION ?? '.js'
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const platform = process.platform || os.platform()
 const preloadPath = path.resolve(
-  currentDir,
-  path.join(preloadFolder, `electron-preload${preloadExtension}`),
+  __dirname,
+  path.join(preloadFolder, `electron-preload${preloadExtension}`)
 )
-
-// URL de la app (dev vs prod)
 const appUrl = process.env.APP_URL
 
 let mainWindow: BrowserWindow | undefined
 
 async function createWindow() {
+  log.info('📦 createWindow()')
+
   mainWindow = new BrowserWindow({
-    icon: path.resolve(currentDir, "icons/icon.png"),
+    icon: path.resolve(__dirname, 'icons/icon.png'),
     width: 1000,
     height: 700,
     resizable: false,
@@ -42,67 +53,64 @@ async function createWindow() {
     useContentSize: true,
     webPreferences: {
       contextIsolation: true,
-      preload: preloadPath,
-    },
+      preload: preloadPath
+    }
   })
 
   if (appUrl) {
-    // Modo desarrollo: carga Vite dev server
     await mainWindow.loadURL(appUrl)
+    log.info('🌐 Cargando dev server:', appUrl)
   } else {
-    // Modo producción: carga archivo empaquetado y chequea actualizaciones
-
-    await mainWindow.loadFile(path.resolve(currentDir, "index.html"))
-    updateElectronApp()
+    await mainWindow.loadFile(path.resolve(__dirname, 'index.html'))
+    log.info('🗄️ Cargando archivo empaquetado')
     autoUpdater.checkForUpdatesAndNotify()
   }
 
-  // DevTools sólo si se activa DEBUGGING
-  if (process.env.DEBUGGING === "true") {
+  if (process.env.DEBUGGING === 'true') {
     mainWindow.webContents.openDevTools()
   } else {
-    mainWindow.webContents.on("devtools-opened", () => {
+    mainWindow.webContents.on('devtools-opened', () => {
       mainWindow?.webContents.closeDevTools()
     })
   }
 
-  mainWindow.on("closed", () => {
+  mainWindow.on('closed', () => {
     mainWindow = undefined
+    log.info('❌ mainWindow cerrada')
   })
 }
 
-app.whenReady().then(createWindow)
-
-app.on("window-all-closed", () => {
-  if (platform !== "darwin") {
-    app.quit()
-  }
+// 3. Listeners de autoUpdater para forzar escritura de log
+autoUpdater.on('checking-for-update', () => {
+  log.info('🔍 checking-for-update')
 })
-
-app.on("activate", () => {
-  if (!mainWindow) {
-    void createWindow()
-  }
-})
-
-// Eventos del auto-updater
-
-autoUpdater.on("update-available", () => {
+autoUpdater.on('update-available', info => {
+  log.info('✅ update-available', info)
   dialog.showMessageBox({
-    type: "info",
-    title: "Actualización disponible",
-    message: "Hay una nueva versión de la app. Se descargará en segundo plano.",
-    buttons: ["Aceptar"],
+    type: 'info',
+    title: 'Actualización disponible',
+    message: 'Hay una nueva versión de la app. Se descargará en segundo plano.',
+    buttons: ['Aceptar']
   })
 })
-
-autoUpdater.on("update-downloaded", () => {
+autoUpdater.on('update-not-available', () => {
+  log.info('🚫 update-not-available')
+})
+autoUpdater.on('error', err => {
+  log.error('❌ autoUpdater error:', err)
+  dialog.showErrorBox(
+    'Error al buscar actualizaciones',
+    err == null ? 'Error desconocido' : err.message || err.toString()
+  )
+})
+autoUpdater.on('update-downloaded', info => {
+  log.info('📥 update-downloaded', info)
   dialog
     .showMessageBox({
-      type: "question",
-      title: "Reiniciar para actualizar",
-      message: "La actualización está lista. ¿Deseas reiniciar ahora?",
-      buttons: ["Reiniciar", "Más tarde"],
+      type: 'question',
+      title: 'Reiniciar para actualizar',
+      message: 'La actualización está lista. ¿Deseas reiniciar ahora?',
+      buttons: ['Reiniciar', 'Más tarde']
     })
     .then(({ response }) => {
       if (response === 0) {
@@ -111,9 +119,17 @@ autoUpdater.on("update-downloaded", () => {
     })
 })
 
-autoUpdater.on("error", (error) => {
-  dialog.showErrorBox(
-    "Error al buscar actualizaciones",
-    error == null ? "Error desconocido" : error.message || error.toString(),
-  )
+// 4. Ciclo de vida de la app
+app.whenReady().then(createWindow)
+
+app.on('window-all-closed', () => {
+  if (platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+app.on('activate', () => {
+  if (!mainWindow) {
+    void createWindow()
+  }
 })
