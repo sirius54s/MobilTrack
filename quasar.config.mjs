@@ -131,8 +131,8 @@ export default configure(() => ({
       publish: [
         {
           provider: "github",
-          owner: "TU_USUARIO", // 🔥 Reemplaza con tu usuario GitHub
-          repo: "MobilTrack", // 🔥 Reemplaza con tu repositorio
+          owner: "sirius54s",
+          repo: "MobilTrack",
         },
       ],
     },
