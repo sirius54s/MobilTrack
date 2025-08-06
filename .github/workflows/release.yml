@@ -3,76 +3,106 @@ name: Build & Release
 on:
   push:
     branches: [main]
+    paths:
+      - 'package.json'
+      - 'src/**'
+      - 'src-electron/**'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Nueva versión (ej: 0.1.8)'
+        required: true
+        type: string
 
-# ⚡ PERMISOS CRÍTICOS para semantic-release
 permissions:
-  contents: write    # Para crear tags y commits
-  issues: write      # Para crear releases
-  pull-requests: write  # Para PRs automáticos
+  contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
-  # Verificar si hay commits que requieren release
-  check-release:
-    name: Check if release needed
+  # Detectar cambio de versión
+  check-version:
+    name: Check Version Change
     runs-on: ubuntu-latest
     outputs:
-      should_release: ${{ steps.check.outputs.release }}
+      version_changed: ${{ steps.check.outputs.changed }}
+      current_version: ${{ steps.version.outputs.version }}
+      tag_name: ${{ steps.version.outputs.tag }}
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          token: ${{ secrets.GH_TOKEN }}  # ⚡ Usar GH_TOKEN para push
-          token: ${{ secrets.GH_TOKEN }}  # ⚡ Usar GH_TOKEN en lugar de GITHUB_TOKEN
+          fetch-depth: 2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check if release needed
-        id: check
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # ⚡ Usar GH_TOKEN
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Get version
+        id: version
         run: |
-          # Usar semantic-release en modo dry-run para ver si hay release
-          if npx semantic-release --dry-run | grep -q "The next release version is"; then
-            echo "release=true" >> $GITHUB_OUTPUT
-            echo "✅ Release needed"
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check version change
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Manual trigger - building"
+          elif git diff HEAD~1 HEAD --name-only | grep -q "package.json"; then
+            OLD_VERSION=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')).version")
+            NEW_VERSION="${{ steps.version.outputs.version }}"
+            if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
+              echo "changed=true" >> $GITHUB_OUTPUT
+              echo "✅ Version changed: $OLD_VERSION -> $NEW_VERSION"
+            else
+              echo "changed=false" >> $GITHUB_OUTPUT
+              echo "❌ Version unchanged"
+            fi
           else
-            echo "release=false" >> $GITHUB_OUTPUT
-            echo "❌ No release needed"
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "❌ No relevant changes"
           fi
 
-  # Build multi-platform solo si hay release
+  # Update version if manual trigger
+  update-version:
+    name: Update Version (Manual)
+    needs: check-version
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Update package.json
+        run: |
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json
+          git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
+          git push
+
+  # Build solo si cambió la versión
   build:
     name: Build ${{ matrix.platform }}
-    needs: check-release
-    if: needs.check-release.outputs.should_release == 'true'
+    needs: [check-version, update-version]
+    if: always() && needs.check-version.outputs.version_changed == 'true'
     runs-on: ${{ matrix.os }}
     
     strategy:
-      fail-fast: false
       matrix:
         include:
           - os: ubuntu-20.04
             platform: linux
-          - os: windows-latest  
-            platform: windows
+          - os: windows-latest
+            platform: windows  
           - os: macos-latest
             platform: macos
     
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -86,100 +116,105 @@ jobs:
       - name: Install Quasar CLI
         run: npm install -g @quasar/cli
 
-      - name: Build Quasar App  
+      - name: Build Quasar
         run: npm run build
 
-      - name: Build Electron App (no publish yet)
-        run: npm run build:electron
+      - name: Build and publish Electron
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npm run build:electron -- --publish=always
 
-      - name: Upload build artifacts
+      - name: Upload artifacts (fallback)
         uses: actions/upload-artifact@v4
+        if: failure()
         with:
-          name: build-${{ matrix.platform }}
+          name: build-${{ matrix.platform }}-debug
           path: |
-            dist/electron/Packaged/*.exe
-            dist/electron/Packaged/*.dmg
-            dist/electron/Packaged/*.AppImage
-            dist/electron/Packaged/*.deb
-            dist/electron/Packaged/*.zip
+            dist/electron/Packaged/*
+            dist/electron/UnPackaged/*
           if-no-files-found: warn
 
-  # Release con semantic-release (solo desde ubuntu)
-  release:
-    name: Semantic Release
+  # Crear tag y release
+  create-release:
+    name: Create Release
+    needs: [check-version, build]
+    if: needs.build.result == 'success'
     runs-on: ubuntu-latest
-    needs: [check-release, build]
-    if: needs.check-release.outputs.should_release == 'true' && needs.build.result == 'success'
-    env:
-      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-    
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Download all build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
-
-      - name: Move artifacts to dist structure
+      - name: Create tag
         run: |
-          # Recrear estructura de directorios para semantic-release
-          mkdir -p dist/electron/Packaged
-          find artifacts/ -name "*.exe" -exec cp {} dist/electron/Packaged/ \;
-          find artifacts/ -name "*.dmg" -exec cp {} dist/electron/Packaged/ \;
-          find artifacts/ -name "*.AppImage" -exec cp {} dist/electron/Packaged/ \;
-          find artifacts/ -name "*.deb" -exec cp {} dist/electron/Packaged/ \;
-          find artifacts/ -name "*.zip" -exec cp {} dist/electron/Packaged/ \;
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           
-          echo "=== Final artifacts ==="
-          ls -la dist/electron/Packaged/ || echo "No packaged files"
+          # Crear tag si no existe
+          if ! git rev-parse "${{ needs.check-version.outputs.tag_name }}" >/dev/null 2>&1; then
+            git tag ${{ needs.check-version.outputs.tag_name }}
+            git push origin ${{ needs.check-version.outputs.tag_name }}
+            echo "✅ Tag created: ${{ needs.check-version.outputs.tag_name }}"
+          else
+            echo "⚠️ Tag already exists: ${{ needs.check-version.outputs.tag_name }}"
+          fi
 
-      - name: Run Semantic Release
-        run: npx semantic-release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check-version.outputs.tag_name }}
+          name: "🚀 MobilTrack ${{ needs.check-version.outputs.tag_name }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## 📱 MobilTrack ${{ needs.check-version.outputs.tag_name }}
+            
+            ### 📦 Descargas disponibles:
+            - **Windows**: Descarga el archivo `.exe` para instalación
+            - **macOS**: Descarga el archivo `.dmg` 
+            - **Linux**: Descarga `.AppImage` (portable) o `.deb` (instalador)
+            
+            ### 🔄 Actualización automática
+            Esta versión incluye actualizaciones automáticas integradas.
+            La aplicación se actualizará automáticamente cuando detecte nuevas versiones.
+            
+            ### 🛠️ Instalación
+            1. Descarga el archivo correspondiente a tu sistema operativo
+            2. Ejecuta el instalador
+            3. La aplicación se iniciará automáticamente
+            
+            ---
+            *Generado automáticamente por GitHub Actions*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-  # Publicar binarios a GitHub releases usando electron-builder  
-  publish:
-    name: Publish to GitHub
+  # Notificación final
+  notify:
+    name: Build Summary
     runs-on: ubuntu-latest
-    needs: [release]
-    if: needs.release.result == 'success'
-    env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-    
+    needs: [check-version, build, create-release]
+    if: always()
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js  
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Quasar CLI
-        run: npm install -g @quasar/cli
-
-      - name: Build and publish Electron
+      - name: Success notification
+        if: needs.create-release.result == 'success'
         run: |
-          npm run build
-          npm run build:electron -- --publish=always
+          echo "🎉 Build completado exitosamente!"
+          echo "📱 MobilTrack ${{ needs.check-version.outputs.tag_name }} está listo"
+          echo "🔗 Revisa el release en: https://github.com/${{ github.repository }}/releases"
+          
+      - name: Failure notification
+        if: needs.build.result == 'failure'
+        run: |
+          echo "❌ Build falló"
+          echo "📋 Revisa los logs para más detalles"
+          
+      - name: No changes notification
+        if: needs.check-version.outputs.version_changed == 'false'
+        run: |
+          echo "ℹ️ No se detectaron cambios de versión"
+          echo "💡 Para generar un release:"
+          echo "   1. Cambia la versión en package.json"
+          echo "   2. O ejecuta el workflow manualmente"
