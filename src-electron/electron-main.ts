@@ -103,11 +103,9 @@ async function createWindow() {
 
   mainWindow = new BrowserWindow({
     icon: path.resolve(__dirname, "icons/icon.png"),
-    width: 1200,
-    height: 800,
-    minWidth: 800,
-    minHeight: 600,
-    resizable: true,
+    width: 1000,
+    height: 700,
+    resizable: false,
     autoHideMenuBar: true,
     useContentSize: true,
     titleBarStyle: "default",
