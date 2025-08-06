@@ -11,10 +11,7 @@ import path from "path"
 import os from "os"
 import { fileURLToPath } from "url"
 
-/**
- * electron-updater es CommonJS. Hay que importarlo como default
- * y después extraer autoUpdater.
- */
+// electron-updater es CommonJS, lo importamos como default y extraemos autoUpdater
 import updaterPkg from "electron-updater"
 const { autoUpdater } = updaterPkg
 
@@ -29,7 +26,7 @@ autoUpdater.logger = log
 
 // 2. Configuración del auto-updater
 autoUpdater.checkForUpdatesAndNotify()
-autoUpdater.autoDownload = false // No descargar automáticamente
+autoUpdater.autoDownload = false
 autoUpdater.autoInstallOnAppQuit = true
 
 // 3. Variables globales
@@ -38,18 +35,17 @@ let updateInfo: any = null
 let isUpdateDownloaded = false
 
 // Rutas dinámicas
+const __dirname = fileURLToPath(new URL(".", import.meta.url))
 const preloadFolder =
   process.env.QUASAR_ELECTRON_PRELOAD_FOLDER ?? "dist/electron"
 const preloadExtension = process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION ?? ".js"
-const __dirname = fileURLToPath(new URL(".", import.meta.url))
-const platform = process.platform || os.platform()
 const preloadPath = path.resolve(
   __dirname,
   path.join(preloadFolder, `electron-preload${preloadExtension}`),
 )
 const appUrl = process.env.APP_URL
 
-// 4. Función para mostrar notificaciones del sistema
+// 4. Notificaciones de sistema
 function showUpdateNotification(title: string, body: string) {
   if (Notification.isSupported()) {
     const notification = new Notification({ title, body })
@@ -57,10 +53,9 @@ function showUpdateNotification(title: string, body: string) {
   }
 }
 
-// 5. Función mejorada para mostrar diálogos de actualización
+// 5. Diálogo de actualización
 async function showUpdateDialog(type: "available" | "downloaded", info?: any) {
   if (!mainWindow) return
-
   const buttons =
     type === "available"
       ? ["Descargar ahora", "Recordar más tarde", "Saltar esta versión"]
@@ -97,7 +92,7 @@ async function showUpdateDialog(type: "available" | "downloaded", info?: any) {
   return result.response
 }
 
-// 6. Función para crear la ventana principal
+// 6. Crear ventana principal
 async function createWindow() {
   log.info("📦 Creando ventana principal")
 
@@ -109,7 +104,7 @@ async function createWindow() {
     autoHideMenuBar: true,
     useContentSize: true,
     titleBarStyle: "default",
-    show: false, // No mostrar hasta que esté listo
+    show: false,
     webPreferences: {
       contextIsolation: true,
       preload: preloadPath,
@@ -117,13 +112,10 @@ async function createWindow() {
     },
   })
 
-  // Mostrar ventana cuando esté lista
   mainWindow.once("ready-to-show", () => {
     mainWindow?.show()
 
-    // Verificar actualizaciones solo en producción
     if (!appUrl) {
-      // Esperar un poco antes de verificar actualizaciones
       setTimeout(() => {
         log.info("🔍 Iniciando verificación de actualizaciones...")
         autoUpdater.checkForUpdatesAndNotify()
@@ -131,7 +123,6 @@ async function createWindow() {
     }
   })
 
-  // Cargar la aplicación
   if (appUrl) {
     await mainWindow.loadURL(appUrl)
     log.info("🌐 Cargando dev server:", appUrl)
@@ -140,7 +131,6 @@ async function createWindow() {
     log.info("🗄️ Cargando archivo empaquetado")
   }
 
-  // Configurar DevTools
   if (process.env.DEBUGGING === "true") {
     mainWindow.webContents.openDevTools()
   } else {
@@ -149,7 +139,6 @@ async function createWindow() {
     })
   }
 
-  // Manejar enlaces externos
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url)
     return { action: "deny" }
@@ -161,7 +150,7 @@ async function createWindow() {
   })
 }
 
-// 7. Configurar menú de la aplicación con opción manual de actualización
+// 7. Menú de la aplicación
 function createApplicationMenu() {
   const template: any[] = [
     {
@@ -185,7 +174,6 @@ function createApplicationMenu() {
           click: () => {
             log.info("🔍 Verificación manual de actualizaciones")
             autoUpdater.checkForUpdatesAndNotify()
-
             showUpdateNotification(
               "Buscando actualizaciones",
               "Verificando si hay nuevas versiones disponibles...",
@@ -203,7 +191,7 @@ function createApplicationMenu() {
         },
         {
           label: "Salir",
-          accelerator: process.platform === "darwin" ? "Cmd+Q" : "Ctrl+Q",
+          accelerator: "Ctrl+Q",
           click: () => {
             app.quit()
           },
@@ -216,7 +204,7 @@ function createApplicationMenu() {
   Menu.setApplicationMenu(menu)
 }
 
-// 8. Listeners mejorados del auto-updater
+// 8. Listeners del auto-updater
 autoUpdater.on("checking-for-update", () => {
   log.info("🔍 Verificando actualizaciones...")
 })
@@ -227,13 +215,12 @@ autoUpdater.on("update-available", async (info) => {
 
   showUpdateNotification(
     "🚀 Nueva actualización disponible",
-    `Versión ${info.version} está lista para descargar`,
+    `Versión ${info.version} lista para descargar`,
   )
 
   const choice = await showUpdateDialog("available", info)
-
   switch (choice) {
-    case 0: // Descargar ahora
+    case 0:
       log.info("📥 Iniciando descarga de actualización")
       autoUpdater.downloadUpdate()
       showUpdateNotification(
@@ -241,9 +228,8 @@ autoUpdater.on("update-available", async (info) => {
         "La actualización se está descargando...",
       )
       break
-    case 1: // Recordar más tarde
+    case 1:
       log.info("⏰ Actualización pospuesta")
-      // Recordar en 1 hora
       setTimeout(
         () => {
           if (!isUpdateDownloaded) {
@@ -253,7 +239,7 @@ autoUpdater.on("update-available", async (info) => {
         60 * 60 * 1000,
       )
       break
-    case 2: // Saltar versión
+    case 2:
       log.info("⏭️ Versión omitida:", info.version)
       break
   }
@@ -265,7 +251,6 @@ autoUpdater.on("update-not-available", () => {
 
 autoUpdater.on("error", (err) => {
   log.error("❌ Error en auto-updater:", err)
-
   if (mainWindow) {
     dialog.showErrorBox(
       "Error de actualización",
@@ -279,10 +264,8 @@ autoUpdater.on("error", (err) => {
 autoUpdater.on("download-progress", (progressInfo) => {
   const percent = Math.round(progressInfo.percent)
   log.info(`📥 Progreso de descarga: ${percent}%`)
-
-  // Actualizar título de ventana con progreso
   if (mainWindow) {
-    mainWindow.setTitle(`MobilTrack - Descargando actualización ${percent}%`)
+    mainWindow.setTitle(`MobilTrack - Descargando ${percent}%`)
   }
 })
 
@@ -290,7 +273,6 @@ autoUpdater.on("update-downloaded", async (info) => {
   log.info("📥 Actualización descargada:", info)
   isUpdateDownloaded = true
 
-  // Restaurar título original
   if (mainWindow) {
     mainWindow.setTitle("MobilTrack")
   }
@@ -301,69 +283,61 @@ autoUpdater.on("update-downloaded", async (info) => {
   )
 
   const choice = await showUpdateDialog("downloaded", info)
-
   switch (choice) {
-    case 0: // Reiniciar ahora
+    case 0:
       log.info("🔄 Reiniciando para aplicar actualización")
       autoUpdater.quitAndInstall(false, true)
       break
-    case 1: // Reiniciar al cerrar
+    case 1:
       log.info("🔄 Actualización programada para el próximo reinicio")
       autoUpdater.autoInstallOnAppQuit = true
       break
-    case 2: // Más tarde
+    case 2:
       log.info("⏰ Instalación pospuesta")
       break
   }
 })
 
-// 9. IPC handlers para comunicación con renderer
-ipcMain.handle("get-app-version", () => {
-  return app.getVersion()
-})
-
-ipcMain.handle("check-for-updates", () => {
-  autoUpdater.checkForUpdatesAndNotify()
-})
-
+// 9. IPC handlers
+ipcMain.handle("get-app-version", () => app.getVersion())
+ipcMain.handle("check-for-updates", () =>
+  autoUpdater.checkForUpdatesAndNotify(),
+)
 ipcMain.handle("install-update", () => {
   if (isUpdateDownloaded) {
     autoUpdater.quitAndInstall()
   }
 })
 
-// 10. Ciclo de vida de la aplicación
-app.whenReady().then(() => {
-  createApplicationMenu()
-  createWindow()
+// 10. Ciclo de vida en Windows con un solo lock
+const gotTheLock = app.requestSingleInstanceLock()
 
-  log.info("🚀 Aplicación iniciada", {
-    version: app.getVersion(),
-    platform: platform,
-    userDataPath: app.getPath("userData"),
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on("second-instance", () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
   })
-})
 
-app.on("window-all-closed", () => {
-  if (platform !== "darwin") {
-    app.quit()
-  }
-})
-
-app.on("activate", () => {
-  if (!mainWindow) {
+  app.whenReady().then(() => {
+    createApplicationMenu()
     createWindow()
-  }
-})
+    log.info("🚀 Aplicación iniciada", {
+      version: app.getVersion(),
+      platform: os.platform(),
+      userDataPath: app.getPath("userData"),
+    })
+  })
 
-// 11. Manejar salida de la aplicación
-app.on("before-quit", (event) => {
-  if (isUpdateDownloaded && autoUpdater.autoInstallOnAppQuit) {
-    log.info("🔄 Instalando actualización al salir...")
-  }
-})
+  app.on("window-all-closed", () => {
+    app.quit()
+  })
+}
 
-// 12. Manejo de errores no capturados
+// 11. Manejo de errores globales
 process.on("uncaughtException", (error) => {
   log.error("💥 Excepción no capturada:", error)
 })
