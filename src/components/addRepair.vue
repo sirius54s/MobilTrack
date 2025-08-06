@@ -231,7 +231,7 @@ const submitForm = () => {
               label="Enviar"
               type="submit"
               color="primary"
-              class="full-width"
+              class="full-width a"
             />
           </div>
         </div>
