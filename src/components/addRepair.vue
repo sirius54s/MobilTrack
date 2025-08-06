@@ -49,7 +49,7 @@ const formattedCosto = computed({
 
 const submitForm = () => {
   console.log("Datos enviados:", formData)
-  // Aquí puedes agregar la lógica para enviar el formulario al backend.
+  //// Aquí puedes agregar la lógica para enviar el formulario al backend.
 }
 </script>
 
