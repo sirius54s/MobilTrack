@@ -1,6 +1,3 @@
-// electron-main.ts (o electron-main.js si usas ESM)
-// -----------------------------------------------
-
 import {
   app,
   BrowserWindow,
