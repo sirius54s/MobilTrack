@@ -4,7 +4,7 @@ import { fileURLToPath, URL } from "node:url"
 
 export default configure(() => ({
   // Archivos de arranque
-  boot: ["axios"],
+  boot: ["firebaseConfig", "pinia", "axios"],
 
   // Estilos globales
   css: ["app.sass"],

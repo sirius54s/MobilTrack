@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import mainNavbar from 'src/components/mainNavbar.vue';
+import mainNavbar from "src/components/mainNavbar.vue"
 </script>
 
 <style scoped>

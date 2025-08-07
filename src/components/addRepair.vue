@@ -15,15 +15,33 @@ const estadoOptions = [
   { label: "Pendiente", value: "Pendiente" },
 ]
 
-// El formulario inicia con campos vacíos y el ID se genera automáticamente.
-// Se agrega un único campo booleano 'imprimirBoleta', preseleccionado por defecto.
+// Opciones para la Marca
+const marcaOptions = [
+  { label: "Apple", value: "Apple" },
+  { label: "Samsung", value: "Samsung" },
+  { label: "Huawei", value: "Huawei" },
+  { label: "Xiaomi", value: "Xiaomi" },
+  { label: "Motorola", value: "Motorola" },
+  { label: "Oppo", value: "Oppo" },
+  { label: "Vivo", value: "Vivo" },
+  { label: "Realme", value: "Realme" },
+  { label: "OnePlus", value: "OnePlus" },
+  { label: "Nokia", value: "Nokia" },
+  { label: "Sony", value: "Sony" },
+  { label: "Google", value: "Google" },
+  { label: "LG", value: "LG" },
+]
+
+// Calcular hoy en formato "YYYY-MM-DD"
+const today = new Date().toISOString().split("T")[0]
+
+// Estado reactivo del formulario
 const formData = reactive({
   id: Math.floor(Date.now() * Math.random()).toString(),
+  marca: "",
   modelo: "",
-  estado: "Pendiente", // Se usará para el estado
-  marca: "", // Nuevo campo para la marca
-  fecha: "",
-  // Usamos este campo para "Tipo de reparación"
+  estado: "Pendiente",
+  fecha: today,
   tipoServicio: "",
   costoEstimado: "",
   fechaEntrega: "",
@@ -34,27 +52,25 @@ const formData = reactive({
   imprimirBoleta: true,
 })
 
-// Propiedad computada para formatear el costo con separador de miles (punto)
+// Computed para formatear costo
 const formattedCosto = computed({
   get() {
     if (!formData.costoEstimado) return ""
-    const num = Number(formData.costoEstimado)
-    return new Intl.NumberFormat("es-CL").format(num)
+    return new Intl.NumberFormat("es-CL").format(Number(formData.costoEstimado))
   },
-  set(value: string) {
-    const cleaned = value.toString().replace(/\D/g, "")
-    formData.costoEstimado = cleaned
+  set(val: string) {
+    formData.costoEstimado = val.replace(/\D/g, "")
   },
 })
 
 const submitForm = () => {
   console.log("Datos enviados:", formData)
-  //// Aquí puedes agregar la lógica para enviar el formulario al backend.
+  // lógica de envío al backend…
 }
 </script>
 
 <template>
-  <q-card class="q--md">
+  <q-card class="q-ma-md">
     <!-- Encabezado -->
     <q-bar class="q-pa-xs">
       <q-icon name="arrow_forward" />
@@ -74,14 +90,14 @@ const submitForm = () => {
 
     <q-separator />
 
-    <!-- Formulario en dos columnas horizontales -->
     <q-card-section class="q-pa-md">
       <q-form @submit.prevent="submitForm">
         <div class="row q-col-gutter-md">
-          <!-- Columna Izquierda: Datos del Servicio -->
+          <!-- Columna Izquierda: Servicio -->
           <div class="col-12 col-md-6">
             <div class="section-header">Servicio</div>
-            <!-- Row: ID y Modelo -->
+
+            <!-- ID y Marca -->
             <div class="row q-col-gutter-sm">
               <div class="col-6">
                 <q-input
@@ -94,23 +110,26 @@ const submitForm = () => {
                 />
               </div>
               <div class="col-6">
-                <q-input
+                <q-select
                   filled
                   dense
-                  v-model="formData.modelo"
-                  label="Modelo"
+                  v-model="formData.marca"
+                  :options="marcaOptions"
+                  label="Marca"
                   class="q-mb-sm"
                 />
               </div>
             </div>
-            <!-- Row: Marca y Estado -->
+
+            <!-- Modelo y Estado -->
             <div class="row q-col-gutter-sm">
               <div class="col-6">
                 <q-input
                   filled
                   dense
-                  v-model="formData.marca"
-                  label="Marca"
+                  v-model="formData.modelo"
+                  label="Modelo"
+                  placeholder="Ingresa modelo"
                   class="q-mb-sm"
                 />
               </div>
@@ -119,13 +138,14 @@ const submitForm = () => {
                   filled
                   dense
                   v-model="formData.estado"
-                  label="Estado"
                   :options="estadoOptions"
+                  label="Estado"
                   class="q-mb-sm"
                 />
               </div>
             </div>
-            <!-- Row: Fecha y Tipo de reparación -->
+
+            <!-- Fecha y Tipo de reparación -->
             <div class="row q-col-gutter-sm">
               <div class="col-6">
                 <q-input
@@ -147,7 +167,8 @@ const submitForm = () => {
                 />
               </div>
             </div>
-            <!-- Row: Costo y Entrega -->
+
+            <!-- Costo y Fecha de entrega -->
             <div class="row q-col-gutter-sm">
               <div class="col-6">
                 <q-input
@@ -155,7 +176,6 @@ const submitForm = () => {
                   dense
                   v-model="formattedCosto"
                   label="Costo (CLP)"
-                  type="text"
                   prefix="$"
                   class="q-mb-sm"
                 />
@@ -171,22 +191,23 @@ const submitForm = () => {
                 />
               </div>
             </div>
-            <!-- Row: Técnico (ocupa toda la fila) -->
+
+            <!-- Técnico -->
             <div class="row q-col-gutter-sm">
               <div class="col-12">
                 <q-select
                   filled
                   dense
                   v-model="formData.tecnicoAsignado"
-                  label="Técnico"
                   :options="tecnicos"
+                  label="Técnico"
                   class="q-mb-sm"
                 />
               </div>
             </div>
           </div>
 
-          <!-- Columna Derecha: Datos del Cliente -->
+          <!-- Columna Derecha: Cliente -->
           <div class="col-12 col-md-6">
             <div class="section-header">Cliente</div>
             <q-input
@@ -224,7 +245,7 @@ const submitForm = () => {
           </div>
         </div>
 
-        <!-- Botón de Envío -->
+        <!-- Botón de envío -->
         <div class="row q-mt-md">
           <div class="col-12">
             <q-btn

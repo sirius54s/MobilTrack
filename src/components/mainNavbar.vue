@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router"
 import { useQuasar } from "quasar"
-import { useAuthStore } from "src/stores/authStore"
+import { useAuthStore } from "src/boot/authStorePinia"
 import { useModalStore } from "src/stores/modalStore"
 import { Dark } from "quasar"
 import { version } from "../../package.json"
