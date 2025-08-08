@@ -41,20 +41,35 @@ function darkModeToggle() {
 
 <template>
   <q-toolbar
+    style="min-height: 40px; padding: 0 10px"
     :class="Dark.isActive ? 'bg-grey-9 text-white' : 'bg-grey-1 text-black'"
   >
-    <q-toolbar-title>mobilTrack v{{ version }}</q-toolbar-title>
+    <q-toolbar-title>BETA v{{ version }}</q-toolbar-title>
 
-    <q-btn flat dense round icon="search" aria-label="Buscar" />
     <q-btn
       flat
       dense
       round
-      icon="brightness_6"
-      aria-label="Tema"
+      v-show="auth.user"
+      icon="search"
+      aria-label="Buscar"
+    />
+    <q-btn
+      flat
+      dense
+      round
+      :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'"
+      :aria-label="$q.dark.isActive ? 'Tema claro' : 'Tema oscuro'"
       @click="darkModeToggle"
     />
-    <q-btn flat dense round icon="settings" aria-label="Configuración" />
+    <q-btn
+      flat
+      dense
+      round
+      v-show="auth.user"
+      icon="settings"
+      aria-label="Configuración"
+    />
 
     <q-btn
       flat
@@ -63,6 +78,7 @@ function darkModeToggle() {
       icon="logout"
       aria-label="Cerrar sesión"
       @click="logout"
+      v-show="auth.user"
     >
       <q-tooltip>Cerrar sesión</q-tooltip>
     </q-btn>

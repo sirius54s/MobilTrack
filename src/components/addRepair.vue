@@ -73,8 +73,7 @@ const submitForm = () => {
   <q-card class="q-ma-md">
     <!-- Encabezado -->
     <q-bar class="q-pa-xs">
-      <q-icon name="arrow_forward" />
-      <div>Agregar un nuevo registro:</div>
+      <div class="q-pl-md">Agregar un nuevo registro</div>
       <q-space />
       <q-btn
         dense
