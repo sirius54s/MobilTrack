@@ -25,11 +25,10 @@ let mainWindow: BrowserWindow | undefined
 let updateInfo: any = null
 let isUpdateDownloaded = false
 
-// Flags para que el diálogo no se repita
 let hasAskedForDownload = false
 let hasAskedForInstall = false
 
-// Rutas dinámicas
+// 4. Rutas dinámicas
 const __dirname = fileURLToPath(new URL(".", import.meta.url))
 const preloadFolder =
   process.env.QUASAR_ELECTRON_PRELOAD_FOLDER ?? "dist/electron"
@@ -100,20 +99,32 @@ async function createWindow() {
   })
 
   mainWindow.once("ready-to-show", () => {
+    log.info("🖼️ Ventana lista para mostrar")
     mainWindow?.show()
-    // Lanzamos la primera verificación tras 3s
+
+    // Solo si estás probando el updater en dev
+    if (!app.isPackaged && process.env.DEBUGGING === "true") {
+      ;(app as any).isPackaged = true
+    }
+
     setTimeout(() => {
       log.info("🔍 Iniciando verificación de actualizaciones...")
       autoUpdater.checkForUpdatesAndNotify()
     }, 3000)
   })
 
-  if (appUrl) {
-    await mainWindow.loadURL(appUrl)
-    log.info("🌐 Cargando dev server:", appUrl)
-  } else {
-    await mainWindow.loadFile(path.resolve(__dirname, "index.html"))
-    log.info("🗄️ Cargando archivo empaquetado")
+  try {
+    if (appUrl) {
+      await mainWindow.loadURL(appUrl)
+      log.info("🌐 Cargando dev server:", appUrl)
+    } else {
+      const filePath = path.resolve(__dirname, "index.html")
+      await mainWindow.loadFile(filePath)
+      log.info("🗄️ Cargando archivo empaquetado:", filePath)
+    }
+  } catch (err) {
+    log.error("❌ Error al cargar contenido:", err)
+    dialog.showErrorBox("Error al cargar la app", String(err))
   }
 
   if (process.env.DEBUGGING === "true") {
@@ -135,9 +146,7 @@ async function createWindow() {
   })
 }
 
-// 7. Menú de la aplicación (sin cambios relevantes para actualizaciones)
-
-// 8. Listeners del auto-updater
+// 7. Listeners del auto-updater
 autoUpdater.on("checking-for-update", () => {
   log.info("🔍 Verificando actualizaciones...")
 })
@@ -223,8 +232,11 @@ autoUpdater.on("update-downloaded", async (info) => {
   }
 })
 
-// 9. IPC handlers (sin cambios)
-
-// 10. Ciclo de vida en Windows con un solo lock (sin cambios)
-
-// 11. Manejo de errores globales (sin cambios)
+// 8. Inicialización
+app.on("ready", createWindow)
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit()
+})
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow()
+})
