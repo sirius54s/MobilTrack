@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex-center" style="min-height: 100vh">
+  <q-page class="flex-center" style="max-height: 100vh">
     <q-card class="q-pa-lg" style="max-width: 400px; width: 100%">
       <div class="text-h6 text-center q-mb-md">Autenticación</div>
 

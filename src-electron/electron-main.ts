@@ -87,8 +87,8 @@ async function createWindow() {
     width: 1000,
     height: 700,
     resizable: false,
-    autoHideMenuBar: true,
-    useContentSize: true,
+    autoHideMenuBar: false,
+    useContentSize: false,
     titleBarStyle: "default",
     show: false,
     webPreferences: {
