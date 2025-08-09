@@ -1,59 +1,58 @@
 // src/boot/AuthRouter.ts
 import { Router } from "vue-router"
-import { auth } from "src/boot/firebaseConfig"
+import { auth, db } from "src/boot/firebaseConfig"
 import { User, onAuthStateChanged } from "firebase/auth"
+import { doc, getDoc } from "firebase/firestore"
 
-function getCurrentUser(): Promise<User | null> {
-  return new Promise((resolve) => {
-    if (auth.currentUser !== null) {
-      resolve(auth.currentUser)
-      return
-    }
+// Obtener usuario actual
+const getCurrentUser = (): Promise<User | null> =>
+  new Promise((resolve) => {
+    if (auth.currentUser) return resolve(auth.currentUser)
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       unsubscribe()
       resolve(user)
     })
   })
+
+// Verificar si usuario existe en DB
+const userExists = async (uid: string) => {
+  try {
+    const userDoc = await getDoc(doc(db, "users", uid))
+    return userDoc.exists()
+  } catch {
+    return false
+  }
 }
 
 export function setupAuthGuard(router: Router) {
   router.beforeEach(async (to, from, next) => {
-    console.log("🔒 Auth Guard - Navegando de:", from.path, "hacia:", to.path)
+    const requiresAuth = to.matched.some((record) => record.meta?.requiresAuth)
+    const user = await getCurrentUser()
 
-    // Verificar si la ruta requiere autenticación
-    const requiresAuth = to.matched.some(
-      (record) => record.meta?.requiresAuth === true,
-    )
-    console.log("🔐 Requiere autenticación:", requiresAuth)
-    console.log("📋 Meta de la ruta:", to.meta)
-
-    try {
-      const user = await getCurrentUser()
-      console.log("👤 Usuario actual:", user?.email || "No autenticado")
-
-      if (requiresAuth && !user) {
-        console.log("❌ Acceso denegado - Redirigiendo a login")
-        next({ name: "login" })
-        return
-      }
-
-      if (
-        !requiresAuth &&
-        user &&
-        (to.path === "/login" || to.name === "login")
-      ) {
-        console.log("✅ Usuario ya autenticado - Redirigiendo a home")
-        if (from.path !== "/" || from.name !== "home") {
-          next({ name: "home" })
-          return
-        }
-      }
-
-      console.log("✅ Acceso permitido")
-      next()
-    } catch (error) {
-      console.error("💥 Error en auth guard:", error)
-      next({ name: "login" })
+    // Sin auth y ruta protegida -> login
+    if (requiresAuth && !user) {
+      return next({ name: "login" })
     }
+
+    // Con auth y va a login -> verificar setup
+    if (!requiresAuth && user && to.name === "login") {
+      const hasDocument = await userExists(user.uid)
+
+      if (!hasDocument) {
+        return next({ name: "setupPage" })
+      } else if (from.name !== "home") {
+        return next({ name: "home" })
+      }
+    }
+
+    // Con auth y ruta protegida (no setup) -> verificar documento
+    if (user && requiresAuth && to.name !== "setupPage") {
+      const hasDocument = await userExists(user.uid)
+      if (!hasDocument) {
+        return next({ name: "setupPage" })
+      }
+    }
+
+    next()
   })
 }

@@ -87,8 +87,9 @@ async function createWindow() {
     width: 1000,
     height: 700,
     resizable: false,
-    autoHideMenuBar: false,
+    autoHideMenuBar: true,
     useContentSize: false,
+
     titleBarStyle: "default",
     show: false,
     webPreferences: {
@@ -97,6 +98,8 @@ async function createWindow() {
       nodeIntegration: false,
     },
   })
+  mainWindow.setMenuBarVisibility(false)
+  mainWindow.setMenu(null)
 
   mainWindow.once("ready-to-show", () => {
     log.info("🖼️ Ventana lista para mostrar")

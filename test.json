@@ -1,0 +1,73 @@
+{
+  "users": {
+    "uid_12345": {
+      "nombre": "Joel Martínez",
+      "email": "joel@example.com",
+      "telefono": "+56 9 1234 5678",
+      "empresa": "ryh",
+      "tecnicos": [
+        {
+          "id": "tecnico_001",
+          "nombre": "Carlos"
+        },
+        {
+          "id": "tecnico_002",
+          "nombre": "María"
+        }
+      ],
+      "configuracion": {
+        "tema": "oscuro",
+        "idioma": "es",
+        "notificaciones": {
+          "email": true,
+          "push": false
+        },
+        "vistaTabla": {
+          "columnasVisibles": ["cliente", "estado", "fecha", "dispositivo"],
+          "ordenPorDefecto": "fecha_desc"
+        },
+        "modulos": {
+          "dashboard": {
+            "nombre": "Panel Principal",
+            "disponible": true,
+            "visible": true
+          },
+          "reparaciones": {
+            "nombre": "Gestión de Reparaciones",
+            "disponible": true,
+            "visible": true
+          },
+          "clientes": {
+            "nombre": "Administración de Clientes",
+            "disponible": true,
+            "visible": true
+          }
+        }
+      },
+      "repairs": {
+        "repair_001": {
+          "fecha": "2025-08-08T10:30:00Z",
+          "estado": "pendiente",
+          "tecnicoAsignado": "Carlos",
+          "cliente": "Juan Pérez",
+          "dispositivo": "Samsung Galaxy S21",
+          "problema": "Pantalla rota",
+          "notas": "Cliente solicita repuesto original",
+          "precioEstimado": 120000,
+          "urgente": true
+        },
+        "repair_002": {
+          "fecha": "2025-08-07T14:15:00Z",
+          "estado": "completado",
+          "tecnicoAsignado": "Joel",
+          "cliente": "María López",
+          "dispositivo": "iPhone 12",
+          "problema": "Batería inflada",
+          "notas": "Se reemplazó batería y se hizo limpieza interna",
+          "precioEstimado": 95000,
+          "urgente": false
+        }
+      }
+    }
+  }
+}

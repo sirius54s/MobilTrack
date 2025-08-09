@@ -5,11 +5,25 @@ import { useAuthStore } from "src/boot/authStorePinia"
 import { useModalStore } from "src/stores/modalStore"
 import { Dark } from "quasar"
 import { version } from "../../package.json"
+import ConfigApp from "src/components/MainNavbarOption/configApp.vue"
 
 const router = useRouter()
 const $q = useQuasar()
 const auth = useAuthStore()
 const modalStore = useModalStore()
+
+interface Settings {
+  theme: string
+  notifications: { email: boolean }
+  modules: {
+    dashboard: { name: string; install: boolean; disable: boolean }
+    repairs: { name: string; install: boolean; disable: boolean }
+    clients: { name: string; install: boolean; disable: boolean }
+    technicians: { name: string; install: boolean; disable: boolean }
+    reports: { name: string; install: boolean; disable: boolean }
+    settings: { name: string; install: boolean; disable: boolean }
+  }
+}
 
 function logout() {
   $q.dialog({
@@ -37,6 +51,22 @@ function logout() {
 function darkModeToggle() {
   $q.dark.toggle()
 }
+
+function openConfigModal() {
+  modalStore.openModal(ConfigApp)
+}
+
+// Función para manejar cuando se guarde la configuración
+function handleConfigSave(settings: Settings) {
+  // Guardar en localStorage, Firebase, etc.
+  console.log("Settings saved:", settings)
+
+  // Opcional: guardar en localStorage
+  localStorage.setItem("appSettings", JSON.stringify(settings))
+
+  // O guardar en Firebase si tienes la configuración del usuario
+  // await setDoc(doc(db, "users", auth.user.uid), { settings }, { merge: true })
+}
 </script>
 
 <template>
@@ -44,7 +74,9 @@ function darkModeToggle() {
     style="min-height: 40px; padding: 0 10px"
     :class="Dark.isActive ? 'bg-grey-9 text-white' : 'bg-grey-1 text-black'"
   >
-    <q-toolbar-title>BETA v{{ version }}</q-toolbar-title>
+    <q-toolbar-title style="font-size: 15px">
+      BETA v{{ version }}
+    </q-toolbar-title>
 
     <q-btn
       flat
@@ -69,6 +101,7 @@ function darkModeToggle() {
       v-show="auth.user"
       icon="settings"
       aria-label="Configuración"
+      @click="openConfigModal"
     />
 
     <q-btn
@@ -89,6 +122,7 @@ function darkModeToggle() {
     <component
       :is="modalStore.activeModalComponent"
       @close="modalStore.closeModal"
+      @save="handleConfigSave"
     />
   </q-dialog>
 </template>
